@@ -1,0 +1,4 @@
+{
+   "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
+   "sonarlint.pathToCompileCommands": "${workspaceFolder}/build_nrf52840dk/compile_commands.json"
+}

@@ -1,0 +1,34 @@
+// To get started, press Ctrl+Space to bring up the completion menu and view the available nodes.
+
+// You can also use the buttons in the sidebar to perform actions on nodes.
+// Actions currently available include:
+
+// * Enabling / disabling the node
+// * Adding the bus to a bus
+// * Removing the node
+// * Connecting ADC channels
+
+// For more help, browse the DeviceTree documentation at https://docs.zephyrproject.org/latest/guides/dts/index.html
+// You can also visit the nRF DeviceTree extension documentation at https://nrfconnect.github.io/vscode-nrf-connect/devicetree/nrfdevicetree.html
+
+&arduino_i2c {
+   compatible = "nordic,nrf-twim";
+   status = "okay";
+   clock-frequency = <I2C_BITRATE_FAST>;
+   zephyr,concat-buf-size = <4096>;
+
+   ssd1306: ssd1306@3c {
+      compatible = "solomon,ssd1306fb";
+      reg = <0x3c>; //0x3c is the i2c address of the SSD1306 aIC.
+      width = <128>;
+      height = <64>; // Change from '32' to '64' when using the 128x64 pixel version.
+      segment-offset = <0>;
+      page-offset = <0>;
+      display-offset = <0>;
+      multiplex-ratio = <63>; //change from '31' to '63' when using the 128x64 pixel version
+      segment-remap;
+      com-invdir;
+      // com-sequential;
+      prechargep = <0x22>;
+   };
+};
