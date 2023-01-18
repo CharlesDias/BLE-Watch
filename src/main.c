@@ -12,19 +12,74 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/hci.h>
+#include <zephyr/bluetooth/conn.h>
+#include <zephyr/bluetooth/uuid.h>
+#include <zephyr/bluetooth/gatt.h>
+
 #define SLEEP_TIME_MS 1000
 
 // The devicetree node identifier for the "led0" alias.
 #define LED0_NODE DT_ALIAS(led0)
+
+#define DEVICE_NAME        CONFIG_BT_DEVICE_NAME
+#define DEVICE_NAME_LEN    (sizeof(DEVICE_NAME) - 1)
 
 static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 // Register module log name
 LOG_MODULE_REGISTER(Main, LOG_LEVEL_DBG);
 
+// Bluetooth advertisement
+static const struct bt_data ad[] = {
+   BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
+   BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
+};
+
+// Connected callback function
+static void connected(struct bt_conn *conn, uint8_t err)
+{
+   if(err)
+   {
+      LOG_ERR("Connection failed (err 0x%02x)\n", err);
+   }
+   else
+   {
+      LOG_INF("Connection successful!");
+   }
+}
+
+// Disconnected callback function
+static void disconnected(struct bt_conn *conn, uint8_t reason)
+{
+   LOG_INF("Disconnected (reason 0x%02x)", reason);
+}
+
+// Register for connection callbacks
+BT_CONN_CB_DEFINE(conn_callbacks) = {
+   .connected = connected,
+   .disconnected = disconnected,
+};
+
+static void bt_ready(void)
+{
+   int err = 0;
+
+   LOG_DBG("Bluetooth initialized");
+
+   err = bt_le_adv_start(BT_LE_ADV_CONN, ad, ARRAY_SIZE(ad), NULL, 0);
+   if (err) {
+      LOG_ERR("Advertising failed to start (err %d)", err);
+      return;
+   }
+
+   LOG_INF("Advertising successfully started");
+}
+
 void main(void)
 {
-   int ret;
+   int err;
    uint32_t count = 0;
    char count_str[] = {"2023/01/15 00:00"};
    const struct device *display_dev;
@@ -42,8 +97,8 @@ void main(void)
 
    LOG_DBG("Device %s is READY.", led0.port->name);
 
-   ret = gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
-   if (ret < 0)
+   err = gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
+   if (err < 0)
    {
       LOG_ERR("It was not possible configure the device %s.", led0.port->name);
       return;
@@ -81,6 +136,17 @@ void main(void)
    
    lv_task_handler();
    display_blanking_off(display_dev);
+
+   // Enable Bluetooth
+   err = bt_enable(NULL);
+   if(err)
+   {
+      LOG_ERR("Bluetooth init failed (err %d)", err);
+      return;
+   }
+
+   // Start advertising
+   bt_ready();
 
    while (1)
    {
