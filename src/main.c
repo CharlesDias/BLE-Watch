@@ -13,10 +13,12 @@
 #include <string.h>
 
 #include <zephyr/bluetooth/bluetooth.h>
-#include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/conn.h>
-#include <zephyr/bluetooth/uuid.h>
-#include <zephyr/bluetooth/gatt.h>
+// #include <zephyr/bluetooth/hci.h>
+// #include <zephyr/bluetooth/uuid.h>
+// #include <zephyr/bluetooth/gatt.h>
+
+#include <zephyr/bluetooth/services/bas.h>
 
 #define SLEEP_TIME_MS 1000
 
@@ -75,6 +77,20 @@ static void bt_ready(void)
    }
 
    LOG_INF("Advertising successfully started");
+}
+
+// Implements the battery level notification
+static void battery_level_notify(void)
+{
+   uint8_t battery_level = bt_bas_get_battery_level();
+
+   battery_level--;
+
+   if (!battery_level) {
+      battery_level = 100U;
+   }
+
+   bt_bas_set_battery_level(battery_level);
 }
 
 void main(void)
@@ -160,6 +176,9 @@ void main(void)
          }
          snprintf(count_str, sizeof(count_str), "2023/01/15 00:%02d", count / 100U);
          lv_label_set_text(timer_label, count_str);
+
+         /* Battery level simulation */
+		   battery_level_notify();
       }
       lv_task_handler();
       ++count;
