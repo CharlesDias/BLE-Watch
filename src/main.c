@@ -14,13 +14,15 @@
 
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
+#include <zephyr/bluetooth/uuid.h>
+#include <zephyr/bluetooth/gatt.h>
 // #include <zephyr/bluetooth/hci.h>
-// #include <zephyr/bluetooth/uuid.h>
-// #include <zephyr/bluetooth/gatt.h>
 
 #include <zephyr/bluetooth/services/bas.h>
 
 #define SLEEP_TIME_MS 1000
+
+#define DISPLAY_MSG_BUFFER_SIZE     32
 
 // The devicetree node identifier for the "led0" alias.
 #define LED0_NODE DT_ALIAS(led0)
@@ -38,6 +40,70 @@ static const struct bt_data ad[] = {
    BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
    BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
 };
+
+// Define custom services and characteristics
+// Service: BLE Watch UUID 3C134D60-E275-406D-B6B4-BF0CC712CB7C
+static struct bt_uuid_128 ble_watch_service_uuid = 
+   BT_UUID_INIT_128( 0x7C, 0xCB, 0x12, 0xC7, 0x0C, 0xBF, 
+                     0xB4, 0xB6,
+                     0x6D, 0x40,
+                     0x75, 0xE2,
+                     0x60, 0x4D, 0x13, 0x3C);
+
+// Characteristics: Display message UUID 3C134D61-E275-406D-B6B4-BF0CC712CB7C
+static struct bt_uuid_128 display_charac_uuid = 
+   BT_UUID_INIT_128( 0x7C, 0xCB, 0x12, 0xC7, 0x0C, 0xBF, 
+                     0xB4, 0xB6,
+                     0x6D, 0x40,
+                     0x75, 0xE2,
+                     0x61, 0x4D, 0x13, 0x3C);
+
+static uint8_t display_msg_buffer[DISPLAY_MSG_BUFFER_SIZE] = "By: Charles Dias";
+
+// Display read
+ssize_t display_msg_read(struct bt_conn *conn,
+                     const struct bt_gatt_attr *attr, void *buf,
+                     uint16_t len, uint16_t offset)
+{
+   uint16_t size_str = (uint16_t)strlen(display_msg_buffer);
+   uint16_t size = size_str > DISPLAY_MSG_BUFFER_SIZE ? DISPLAY_MSG_BUFFER_SIZE : size_str;
+
+   LOG_DBG("Read display msg: %s", display_msg_buffer);
+
+   return bt_gatt_attr_read(conn, attr, buf, len, offset, display_msg_buffer, size);
+}
+
+// Display write
+ssize_t display_msg_write(struct bt_conn *conn,
+                     const struct bt_gatt_attr *attr, const void *buf, 
+                     uint16_t len, uint16_t offset, uint8_t flags)
+{
+   uint16_t size = len >= DISPLAY_MSG_BUFFER_SIZE ? DISPLAY_MSG_BUFFER_SIZE - 1 : len; 
+
+   memcpy(display_msg_buffer, buf, size);
+   display_msg_buffer[size] = '\0';
+
+   LOG_DBG("Received message size %u: %s", len, display_msg_buffer);
+
+   return len;
+}
+
+// Instatiate the Service and its characteristics
+BT_GATT_SERVICE_DEFINE(
+   ble_watch,
+
+   // BLE Watch service
+   BT_GATT_PRIMARY_SERVICE(&ble_watch_service_uuid),
+
+   // Display characteristics
+   // Properties: Read, Write
+   BT_GATT_CHARACTERISTIC( &display_charac_uuid.uuid,
+                           BT_GATT_CHRC_READ | BT_GATT_CHRC_WRITE,
+                           BT_GATT_PERM_READ | BT_GATT_PERM_WRITE,
+                           display_msg_read,
+                           display_msg_write,
+                           display_msg_buffer)
+);
 
 // Connected callback function
 static void connected(struct bt_conn *conn, uint8_t err)
@@ -99,7 +165,7 @@ void main(void)
    uint32_t count = 0;
    char count_str[] = {"2023/01/15 00:00"};
    const struct device *display_dev;
-   lv_obj_t *author_label;
+   lv_obj_t *msg_label;
    lv_obj_t *title_label;
    lv_obj_t *timer_label;
 
@@ -127,10 +193,6 @@ void main(void)
       return;
    }
 
-   author_label = lv_label_create(lv_scr_act());
-   lv_label_set_text(author_label, "By: Charles Dias");
-   lv_obj_align(author_label, LV_ALIGN_TOP_LEFT, 0, 0);
-
    if (IS_ENABLED(CONFIG_LV_Z_POINTER_KSCAN))
    {
       lv_obj_t *hello_world_button;
@@ -145,11 +207,15 @@ void main(void)
    }
 
    lv_label_set_text(title_label, "BLE Watch!");
-   lv_obj_align(title_label, LV_ALIGN_CENTER, 0, 0);
+   lv_obj_align(title_label, LV_ALIGN_TOP_MID, 0, 0);
 
    timer_label = lv_label_create(lv_scr_act());
-   lv_obj_align(timer_label, LV_ALIGN_BOTTOM_LEFT, 8, 0);
+   lv_obj_align(timer_label, LV_ALIGN_LEFT_MID, 8, 0);
    
+   msg_label = lv_label_create(lv_scr_act());
+   lv_label_set_text(msg_label, display_msg_buffer);
+   lv_obj_align(msg_label, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+
    lv_task_handler();
    display_blanking_off(display_dev);
 
@@ -177,8 +243,10 @@ void main(void)
          snprintf(count_str, sizeof(count_str), "2023/01/15 00:%02d", count / 100U);
          lv_label_set_text(timer_label, count_str);
 
+         lv_label_set_text(msg_label, display_msg_buffer);
+
          /* Battery level simulation */
-		   battery_level_notify();
+         battery_level_notify();
       }
       lv_task_handler();
       ++count;
