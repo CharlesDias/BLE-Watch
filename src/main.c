@@ -214,6 +214,10 @@ static void battery_level_notify(void)
 
 // ###################################################################################
 // RTC
+// FIXME
+// Use queue to share this information
+const char *rtc_msg_time;
+
 /* Format times as: YYYY-MM-DD HH:MM:SS DOW DOY */
 static const char *format_time(time_t time,
                long nsec)
@@ -342,8 +346,9 @@ static void min_alarm_handler(const struct device *dev,
       ts->tv_nsec -= NSEC_PER_SEC;
    }
 
+	rtc_msg_time = format_time(time, -1);
    printk("%s: adj %d.%09lu, uptime %u:%02u:%02u.%03u, clk err %d ppm\n",
-         format_time(time, -1),
+         rtc_msg_time,
          (uint32_t)(ts->tv_sec - time), ts->tv_nsec,
          hr, mn, se, us, err_ppm);
 }
@@ -492,10 +497,10 @@ void rtc_ds3231_init(void)
          sp.syncclock);
 
    rc = maxim_ds3231_get_alarm(ds3231, 0, &sec_alarm);
-   printk("\nAlarm 1 flags %x at %u: %d\n", sec_alarm.flags,
+   printk("\nAlarm 1 flags 0x%02X at %u: %d\n", sec_alarm.flags,
          (uint32_t)sec_alarm.time, rc);
    rc = maxim_ds3231_get_alarm(ds3231, 1, &min_alarm);
-   printk("Alarm 2 flags %x at %u: %d\n", min_alarm.flags,
+   printk("Alarm 2 flags 0x%02X at %u: %d\n", min_alarm.flags,
          (uint32_t)min_alarm.time, rc);
 
    /* One-shot auto-disable callback in 5 s.  The handler will
@@ -503,10 +508,13 @@ void rtc_ds3231_init(void)
    * alarm 10 s later.
    */
    sec_alarm.time = sp.rtc.tv_sec + 5;
-   sec_alarm.flags = MAXIM_DS3231_ALARM_FLAGS_AUTODISABLE
-         | MAXIM_DS3231_ALARM_FLAGS_DOW;
-   sec_alarm.handler = sec_alarm_handler;
-   sec_alarm.user_data = &sec_alarm;
+   sec_alarm.flags = MAXIM_DS3231_ALARM_FLAGS_DOW
+         | MAXIM_DS3231_ALARM_FLAGS_IGNDA
+         | MAXIM_DS3231_ALARM_FLAGS_IGNHR
+         | MAXIM_DS3231_ALARM_FLAGS_IGNMN
+         | MAXIM_DS3231_ALARM_FLAGS_IGNSE;
+   sec_alarm.handler = min_alarm_handler;
+   // sec_alarm.user_data = &sec_alarm;
 
    printk("Min Sec base time: %s\n", format_time(sec_alarm.time, -1));
 
@@ -520,21 +528,21 @@ void rtc_ds3231_init(void)
    min_alarm.handler = min_alarm_handler;
 
    rc = maxim_ds3231_set_alarm(ds3231, 0, &sec_alarm);
-   printk("Set sec alarm %x at %u ~ %s: %d\n", sec_alarm.flags,
+   printk("Set sec alarm 0x%02X at %u ~ %s: %d\n", sec_alarm.flags,
          (uint32_t)sec_alarm.time, format_time(sec_alarm.time, -1), rc);
 
    rc = maxim_ds3231_set_alarm(ds3231, 1, &min_alarm);
-   printk("Set min alarm flags %x at %u ~ %s: %d\n", min_alarm.flags,
+   printk("Set min alarm flags 0x%02X at %u ~ %s: %d\n", min_alarm.flags,
          (uint32_t)min_alarm.time, format_time(min_alarm.time, -1), rc);
 
    printk("%u ms in: get alarms: %d %d\n", k_uptime_get_32(),
          maxim_ds3231_get_alarm(ds3231, 0, &sec_alarm),
          maxim_ds3231_get_alarm(ds3231, 1, &min_alarm));
    if (rc >= 0) {
-      printk("Sec alarm flags %x at %u ~ %s\n", sec_alarm.flags,
+      printk("Sec alarm flags 0x%02X at %u ~ %s\n", sec_alarm.flags,
             (uint32_t)sec_alarm.time, format_time(sec_alarm.time, -1));
 
-      printk("Min alarm flags %x at %u ~ %s\n", min_alarm.flags,
+      printk("Min alarm flags 0x%02X at %u ~ %s\n", min_alarm.flags,
             (uint32_t)min_alarm.time, format_time(min_alarm.time, -1));
    }
 }
@@ -625,12 +633,15 @@ void main(void)
       {
          gpio_pin_toggle_dt(&led0);
 
-         if(count >= 6000U)
-         {
-            count = 0;
-         }
-         snprintf(time_str, sizeof(time_str), "00:00:%02d", count / 100U);
-         lv_label_set_text(time_label, time_str);
+         char sub_string[32] = {0};
+         memset(sub_string, 0x00, sizeof(sub_string));
+         strncpy(sub_string, rtc_msg_time, 10);
+         strncat(sub_string, rtc_msg_time + 19, 4);
+         lv_label_set_text(date_label, sub_string);
+
+         memset(sub_string, 0x00, sizeof(sub_string));
+         strncpy(sub_string, rtc_msg_time + 11, 8);
+         lv_label_set_text(time_label, sub_string);
 
          lv_label_set_text(msg_label, display_msg_buffer);
 
