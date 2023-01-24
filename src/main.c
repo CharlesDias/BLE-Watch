@@ -12,8 +12,13 @@
 #include <stdio.h>
 #include <string.h>
 
+// GATT Device Information Service
+#include <zephyr/bluetooth/services/dis.h>
+#include <zephyr/settings/settings.h>
+
 // Bluetooth include files
 #include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/bluetooth/gatt.h>
@@ -66,6 +71,40 @@ static struct bt_uuid_128 display_charac_uuid =
                      0x61, 0x4D, 0x13, 0x3C);
 
 static uint8_t display_msg_buffer[DISPLAY_MSG_BUFFER_SIZE] = "By: Charles Dias";
+
+// Setting the device information
+static int settings_runtime_load(void)
+{
+#if defined(CONFIG_BT_DIS_SETTINGS)
+   settings_runtime_set("bt/dis/model",
+            CONFIG_BT_DIS_MODEL,
+            sizeof(CONFIG_BT_DIS_MODEL));
+   settings_runtime_set("bt/dis/manuf",
+            CONFIG_BT_DIS_MANUF,
+            sizeof(CONFIG_BT_DIS_MANUF));
+#if defined(CONFIG_BT_DIS_SERIAL_NUMBER)
+   settings_runtime_set("bt/dis/serial",
+            CONFIG_BT_DIS_SERIAL_NUMBER_STR,
+            sizeof(CONFIG_BT_DIS_SERIAL_NUMBER_STR));
+#endif
+#if defined(CONFIG_BT_DIS_SW_REV)
+   settings_runtime_set("bt/dis/sw",
+            CONFIG_BT_DIS_SW_REV_STR,
+            sizeof(CONFIG_BT_DIS_SW_REV_STR));
+#endif
+#if defined(CONFIG_BT_DIS_FW_REV)
+   settings_runtime_set("bt/dis/fw",
+            CONFIG_BT_DIS_FW_REV_STR,
+            sizeof(CONFIG_BT_DIS_FW_REV_STR));
+#endif
+#if defined(CONFIG_BT_DIS_HW_REV)
+   settings_runtime_set("bt/dis/hw",
+            CONFIG_BT_DIS_HW_REV_STR,
+            sizeof(CONFIG_BT_DIS_HW_REV_STR));
+#endif
+#endif
+   return 0;
+}
 
 // Display read
 ssize_t display_msg_read(struct bt_conn *conn,
@@ -140,6 +179,13 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 static void bt_ready(void)
 {
    int err = 0;
+
+   // Setting the device information
+   if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
+      settings_load();
+   }
+
+   settings_runtime_load();
 
    LOG_DBG("Bluetooth initialized");
 
@@ -383,7 +429,7 @@ static void set_aligned_clock(const struct device *ds3231)
          sp.syncclock);
 }
 
-void rtc_ds3231(void)
+void rtc_ds3231_init(void)
 {
    const struct device *const ds3231 = DEVICE_DT_GET_ONE(maxim_ds3231);
 
@@ -571,7 +617,7 @@ void main(void)
    // Start advertising
    bt_ready();
 
-   rtc_ds3231();
+   rtc_ds3231_init();
 
    while (1)
    {
