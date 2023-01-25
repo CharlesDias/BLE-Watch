@@ -13,6 +13,7 @@
 #include <string.h>
 
 // GATT Device Information Service
+#include "device_information_service.h"
 #include <zephyr/bluetooth/services/dis.h>
 #include <zephyr/settings/settings.h>
 
@@ -72,40 +73,6 @@ static struct bt_uuid_128 display_charac_uuid =
 
 static uint8_t display_msg_buffer[DISPLAY_MSG_BUFFER_SIZE] = "By: Charles Dias";
 
-// Setting the device information
-static int settings_runtime_load(void)
-{
-#if defined(CONFIG_BT_DIS_SETTINGS)
-   settings_runtime_set("bt/dis/model",
-            CONFIG_BT_DIS_MODEL,
-            sizeof(CONFIG_BT_DIS_MODEL));
-   settings_runtime_set("bt/dis/manuf",
-            CONFIG_BT_DIS_MANUF,
-            sizeof(CONFIG_BT_DIS_MANUF));
-#if defined(CONFIG_BT_DIS_SERIAL_NUMBER)
-   settings_runtime_set("bt/dis/serial",
-            CONFIG_BT_DIS_SERIAL_NUMBER_STR,
-            sizeof(CONFIG_BT_DIS_SERIAL_NUMBER_STR));
-#endif
-#if defined(CONFIG_BT_DIS_SW_REV)
-   settings_runtime_set("bt/dis/sw",
-            CONFIG_BT_DIS_SW_REV_STR,
-            sizeof(CONFIG_BT_DIS_SW_REV_STR));
-#endif
-#if defined(CONFIG_BT_DIS_FW_REV)
-   settings_runtime_set("bt/dis/fw",
-            CONFIG_BT_DIS_FW_REV_STR,
-            sizeof(CONFIG_BT_DIS_FW_REV_STR));
-#endif
-#if defined(CONFIG_BT_DIS_HW_REV)
-   settings_runtime_set("bt/dis/hw",
-            CONFIG_BT_DIS_HW_REV_STR,
-            sizeof(CONFIG_BT_DIS_HW_REV_STR));
-#endif
-#endif
-   return 0;
-}
-
 // Display read
 ssize_t display_msg_read(struct bt_conn *conn,
                      const struct bt_gatt_attr *attr, void *buf,
@@ -134,7 +101,7 @@ ssize_t display_msg_write(struct bt_conn *conn,
    return len;
 }
 
-// Instatiate the Service and its characteristics
+// Instantiate the Service and its characteristics
 BT_GATT_SERVICE_DEFINE(
    ble_watch,
 
@@ -185,7 +152,7 @@ static void bt_ready(void)
       settings_load();
    }
 
-   settings_runtime_load();
+   set_device_information_runtime();
 
    LOG_DBG("Bluetooth initialized");
 

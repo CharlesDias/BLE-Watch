@@ -8,7 +8,7 @@ This is a sample project using the Zephyr RTOS and Nordic nRF Connect to create 
 * OLED monochrome displays SSD1306 128x64 pixels.
 * and the DS3231 real-time clock (RTC).
 
-Both, display and RTC, communicates with the nRF52840 MCU via I2C bus.
+Both display and RTC communicates with the nRF52840 MCU via I2C bus.
 
 Some topics covered:
 

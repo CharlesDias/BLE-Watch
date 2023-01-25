@@ -8,4 +8,15 @@ set(SHIELD ssd1306_128x64)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(ble_watch)
 
-target_sources(app PRIVATE src/main.c)
+set (APP_SOURCES 
+   libraries/src/device_information_service.c
+)
+
+target_sources(app PRIVATE 
+   src/main.c
+   ${APP_SOURCES}
+)
+
+target_include_directories(app PRIVATE
+   libraries/inc
+)
