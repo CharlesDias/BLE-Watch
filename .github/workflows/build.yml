@@ -1,6 +1,11 @@
 name: build
 
-on: [push]
+on: 
+  workflow_dispatch:
+  pull_request:
+    types: [opened, reopened]
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -18,9 +23,10 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: Archive production artifacts
+        name: binaries-artifacts
         path: |
           build/zephyr/zephyr.elf
           build/zephyr/zephyr.hex
           build/zephyr/zephyr.map
-          retention-days: 90
+        if-no-files-found: error
+        retention-days: 30
