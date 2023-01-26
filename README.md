@@ -17,6 +17,10 @@ Some topics covered:
 * Bluetooth Low Energy (LE) technology.
 * The device works as GAP Peripheral and GATT server.
 * Implemented BLE services officially adopted by Bluetooth SIG and custom services too.
+* Continuous integration (CI) with GitHub Actions.
+* Use of Docker container.
+
+<img src="docs/images/project.gif" alt="drawing" width="600"/>
 
 ## Bluetooth Services
 
@@ -64,16 +68,43 @@ Receives messages to be shown on the display screen.
 
 ## Project Structure
 
-Under development.
+```text
+.
+├── app
+│   ├── inc
+│   │   ├── device_information_service.h
+│   │   ├── display_ssd1306.h
+│   │   ├── gatt_central.h
+│   │   └── rtc_ds3231.h
+│   └── src
+│       ├── device_information_service.c
+│       ├── display_ssd1306.c
+│       ├── gatt_central.c
+│       └── rtc_ds3231.c
+├── build_nrf52840dk
+├── CMakeLists.txt
+├── docs
+│   ├── Assigned Numbers.pdf
+│   ├── DS3231.pdf
+│   └── DTS_v1.0.pdf
+├── Kconfig
+├── Makefile
+├── nrf52840dk_nrf52840.overlay
+├── prj.conf
+├── README.md
+├── sample.yaml
+└── src
+    └── main.c
+```
 
-## Building and Running using Docker image
+## Building and running
 
-### Interactive usage
+### Building with Docker image on interactive mode
 
 Access the project folder.
 
 ```console
-cd ble_watch
+cd BLE-Watch
 ```
 
 And run the docker image.
@@ -87,3 +118,16 @@ After that, run the command below to build the firmware.
 ```console
 make build
 ```
+
+### Running
+
+Test the BLE Watch application with the nRF Connect app, which is available for iOS (App Store) and Android (Google Play).
+
+![BLE Watch](docs/images/ble_watch.gif)
+
+## Next improvements
+
+* Create dedicate task to update the display.
+* Implement Bluetooth service to set the date and time.
+* Flash the application project running west on Docker container.
+* Add Doxygen configuration.
