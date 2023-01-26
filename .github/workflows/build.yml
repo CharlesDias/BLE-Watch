@@ -20,7 +20,7 @@ jobs:
       with:
         name: Archive production artifacts
         path: |
-          - /__w/BLE-Watch/BLE-Watch/build/zephyr/zephyr.elf
-          - /__w/BLE-Watch/BLE-Watch/build/zephyr/zephyr.hex
-          - /__w/BLE-Watch/BLE-Watch/build/zephyr/zephyr.map
+          build/zephyr/zephyr.elf
+          build/zephyr/zephyr.hex
+          build/zephyr/zephyr.map
           retention-days: 90
