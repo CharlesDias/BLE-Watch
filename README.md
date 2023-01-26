@@ -1,6 +1,6 @@
 # Bluetooth LE Watch
 
-[![Language](https://img.shields.io/badge/Made%20with-C-blue.svg)](https://shields.io/) <img src="https://img.shields.io/badge/CMake-064F8C?style=for-the-badge&logo=cmake&logoColor=white" height='20px'/>
+[![Language](https://img.shields.io/badge/Made%20with-C-blue.svg)](https://shields.io/) <img src="https://img.shields.io/badge/CMake-064F8C?style=for-the-badge&logo=cmake&logoColor=white" height='20px'/> [![build](https://github.com/CharlesDias/BLE-Watch/actions/workflows/build.yml/badge.svg)](https://github.com/CharlesDias/BLE-Watch/actions/workflows/build.yml)
 
 This is a sample project using the Zephyr RTOS and Nordic nRF Connect to create a BLE watch. This device is composed with:
 
@@ -66,7 +66,7 @@ Receives messages to be shown on the display screen.
 
 Under development.
 
-## Building and Running
+## Building and Running using Docker image
 
 ### Interactive usage
 

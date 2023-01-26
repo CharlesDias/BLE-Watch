@@ -14,3 +14,13 @@ jobs:
     - name: Build the firmware
       run: |
         make build
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: Archive production artifacts
+        path: |
+          - /__w/BLE-Watch/BLE-Watch/build/zephyr/zephyr.elf
+          - /__w/BLE-Watch/BLE-Watch/build/zephyr/zephyr.hex
+          - /__w/BLE-Watch/BLE-Watch/build/zephyr/zephyr.map
+          retention-days: 90
