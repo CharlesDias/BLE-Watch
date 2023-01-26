@@ -1,5 +1,5 @@
-#ifndef LIBRARIES_DEVICE_INFORMATION_SERVICE_H_
-#define LIBRARIES_DEVICE_INFORMATION_SERVICE_H_
+#ifndef APP_DEVICE_INFORMATION_SERVICE_H_
+#define APP_DEVICE_INFORMATION_SERVICE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,4 +13,4 @@ int set_device_information_runtime(void);
 }
 #endif /*__cplusplus */
 
-#endif /* LIBRARIES_DEVICE_INFORMATION_SERVICE_H_ */
+#endif /* APP_DEVICE_INFORMATION_SERVICE_H_ */

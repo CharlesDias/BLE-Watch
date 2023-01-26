@@ -1,5 +1,5 @@
-#ifndef LIBRARIES_RTC_DS3231_H_
-#define LIBRARIES_RTC_DS3231_H_
+#ifndef APP_RTC_DS3231_H_
+#define APP_RTC_DS3231_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,4 +14,4 @@ const char* rtc_ds3231_get_last_time(void);
 }
 #endif /* __cplusplus */
 
-#endif /* LIBRARIES_RTC_DS3231_H_ */
+#endif /* APP_RTC_DS3231_H_ */

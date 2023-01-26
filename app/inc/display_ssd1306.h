@@ -1,5 +1,5 @@
-#ifndef LIBRARIES_SSD1306_H_
-#define LIBRARIES_SSD1306_H_
+#ifndef APP_SSD1306_H_
+#define APP_SSD1306_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,4 +19,4 @@ void display_ssd1306_update_date_time(const char *date_time_string);
 }
 #endif /* __cplusplus */
 
-#endif /* LIBRARIES_SSD1306_H_ */
+#endif /* APP_SSD1306_H_ */
