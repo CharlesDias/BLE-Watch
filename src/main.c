@@ -8,9 +8,11 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/display.h>
 #include <zephyr/drivers/gpio.h>
-#include <lvgl.h>
 #include <stdio.h>
 #include <string.h>
+
+// OLED Display SSD1306
+#include "display_ssd1306.h"
 
 // GATT Device Information Service
 #include "device_information_service.h"
@@ -33,8 +35,6 @@
 #define DEVICE_NAME        CONFIG_BT_DEVICE_NAME
 #define DEVICE_NAME_LEN    (sizeof(DEVICE_NAME) - 1)
 
-#define DISPLAY_MSG_BUFFER_SIZE     32
-
 // The devicetree node identifier for the "led0" alias.
 #define LED0_NODE DT_ALIAS(led0)
 
@@ -46,6 +46,9 @@ static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 // Register module log name
 LOG_MODULE_REGISTER(Main, LOG_LEVEL_DBG);
+
+// Display variable
+static uint8_t ble_message_buffer[DISPLAY_MSG_BUFFER_SIZE];
 
 // Bluetooth advertisement
 static const struct bt_data ad[] = {
@@ -70,19 +73,17 @@ static struct bt_uuid_128 display_charac_uuid =
                      0x75, 0xE2,
                      0x61, 0x4D, 0x13, 0x3C);
 
-static uint8_t display_msg_buffer[DISPLAY_MSG_BUFFER_SIZE] = "By: Charles Dias";
-
 // Display read
 ssize_t display_msg_read(struct bt_conn *conn,
                      const struct bt_gatt_attr *attr, void *buf,
                      uint16_t len, uint16_t offset)
 {
-   uint16_t size_str = (uint16_t)strlen(display_msg_buffer);
-   uint16_t size = size_str > DISPLAY_MSG_BUFFER_SIZE ? DISPLAY_MSG_BUFFER_SIZE : size_str;
+   const char* msg_buffer = display_ssd1306_get_msg_string();
+   uint16_t size = (uint16_t)strlen(msg_buffer);
 
-   LOG_DBG("Read display msg: %s", display_msg_buffer);
+   LOG_DBG("Read display msg: %s", msg_buffer);
 
-   return bt_gatt_attr_read(conn, attr, buf, len, offset, display_msg_buffer, size);
+   return bt_gatt_attr_read(conn, attr, buf, len, offset, msg_buffer, size);
 }
 
 // Display write
@@ -90,12 +91,11 @@ ssize_t display_msg_write(struct bt_conn *conn,
                      const struct bt_gatt_attr *attr, const void *buf, 
                      uint16_t len, uint16_t offset, uint8_t flags)
 {
-   uint16_t size = len >= DISPLAY_MSG_BUFFER_SIZE ? DISPLAY_MSG_BUFFER_SIZE - 1 : len; 
+   const char* msg_buffer = display_ssd1306_get_msg_string();
 
-   memcpy(display_msg_buffer, buf, size);
-   display_msg_buffer[size] = '\0';
+   display_ssd1306_set_msg_string(buf, len);
 
-   LOG_DBG("Received message size %u: %s", len, display_msg_buffer);
+   LOG_DBG("Received message size %u: %s", len, msg_buffer);
 
    return len;
 }
@@ -114,7 +114,7 @@ BT_GATT_SERVICE_DEFINE(
                            BT_GATT_PERM_READ | BT_GATT_PERM_WRITE,
                            display_msg_read,
                            display_msg_write,
-                           display_msg_buffer)
+                           ble_message_buffer)
 );
 
 // Connected callback function
@@ -182,13 +182,6 @@ void main(void)
 {
    int err;
    uint32_t count = 0;
-   char date_str[] = {"2023/01/20 FRI"};
-   char time_str[] = {"00:00:00"};
-   const struct device *display_dev;
-   lv_obj_t *msg_label;
-   lv_obj_t *title_label;
-   lv_obj_t *date_label;
-   lv_obj_t *time_label;
 
    LOG_DBG("Running application on board: %s\n", CONFIG_BOARD);
 
@@ -207,43 +200,7 @@ void main(void)
       return;
    }
 
-   display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
-   if (!device_is_ready(display_dev))
-   {
-      LOG_ERR("Device not ready, aborting test");
-      return;
-   }
-
-   if (IS_ENABLED(CONFIG_LV_Z_POINTER_KSCAN))
-   {
-      lv_obj_t *hello_world_button;
-
-      hello_world_button = lv_btn_create(lv_scr_act());
-      lv_obj_align(hello_world_button, LV_ALIGN_CENTER, 0, 0);
-      title_label = lv_label_create(hello_world_button);
-   }
-   else
-   {
-      title_label = lv_label_create(lv_scr_act());
-   }
-
-   lv_label_set_text(title_label, "BLE Watch");
-   lv_obj_align(title_label, LV_ALIGN_TOP_MID, 0, 0);
-
-   date_label = lv_label_create(lv_scr_act());
-   lv_label_set_text(date_label, date_str);
-   lv_obj_align(date_label, LV_ALIGN_TOP_LEFT, 12, 15);
-   
-   time_label = lv_label_create(lv_scr_act());
-   lv_label_set_text(time_label, time_str);
-   lv_obj_align(time_label, LV_ALIGN_TOP_LEFT, 32, 30);
-
-   msg_label = lv_label_create(lv_scr_act());
-   lv_label_set_text(msg_label, display_msg_buffer);
-   lv_obj_align(msg_label, LV_ALIGN_TOP_LEFT, 0, 47);
-
-   lv_task_handler();
-   display_blanking_off(display_dev);
+   display_ssd1306_init();
 
    // Enable Bluetooth
    err = bt_enable(NULL);
@@ -265,22 +222,14 @@ void main(void)
          gpio_pin_toggle_dt(&led0);
 
          const char *rtc_msg_time = rtc_ds3231_get_last_time();
-         char sub_string[32] = {0};
-         memset(sub_string, 0x00, sizeof(sub_string));
-         strncpy(sub_string, rtc_msg_time, 10);
-         strncat(sub_string, rtc_msg_time + 19, 4);
-         lv_label_set_text(date_label, sub_string);
-
-         memset(sub_string, 0x00, sizeof(sub_string));
-         strncpy(sub_string, rtc_msg_time + 11, 8);
-         lv_label_set_text(time_label, sub_string);
-
-         lv_label_set_text(msg_label, display_msg_buffer);
+         display_ssd1306_update_date_time(rtc_msg_time);
 
          /* Battery level simulation */
          battery_level_notify();
       }
-      lv_task_handler();
+
+      display_ssd1306_run_handler();
+
       ++count;
       k_sleep(K_MSEC(10));
    }
