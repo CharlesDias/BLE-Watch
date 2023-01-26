@@ -11,6 +11,7 @@ project(ble_watch)
 set (APP_SOURCES 
    app/src/device_information_service.c
    app/src/display_ssd1306.c
+   app/src/gatt_central.c
    app/src/rtc_ds3231.c
 )
 
