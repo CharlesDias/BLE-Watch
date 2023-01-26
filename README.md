@@ -68,4 +68,22 @@ Under development.
 
 ## Building and Running
 
-Under development.
+### Interactive usage
+
+Access the project folder.
+
+```console
+cd ble_watch
+```
+
+And run the docker image.
+
+```console
+docker run --rm -it -v ${PWD}:/workdir/project -w /workdir/project charlesdias/nrfconnect-sdk /bin/bash
+```
+
+After that, run the command below to build the firmware.
+
+```console
+make build
+```

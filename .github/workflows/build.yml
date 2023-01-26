@@ -1,0 +1,16 @@
+name: build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: charlesdias/nrfconnect-sdk
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build the firmware
+      run: |
+        make build
