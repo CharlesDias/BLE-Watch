@@ -12,6 +12,10 @@ static int settings_runtime_load(void);
 // Setting the device information
 int set_device_information_runtime(void)
 {
+   if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
+      settings_load();
+   }
+
    LOG_DBG("Settings device information runtime");
    return settings_runtime_load();
 }
