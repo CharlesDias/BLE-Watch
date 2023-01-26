@@ -6,29 +6,13 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/drivers/display.h>
 #include <zephyr/drivers/gpio.h>
 #include <stdio.h>
 #include <string.h>
 
-// OLED Display SSD1306
 #include "display_ssd1306.h"
-
-// GATT Device Information Service
 #include "device_information_service.h"
-#include <zephyr/bluetooth/services/dis.h>
-#include <zephyr/settings/settings.h>
-
-// Bluetooth include files
 #include "gatt_central.h"
-#include <zephyr/bluetooth/bluetooth.h>
-#include <zephyr/bluetooth/hci.h>
-#include <zephyr/bluetooth/conn.h>
-#include <zephyr/bluetooth/uuid.h>
-#include <zephyr/bluetooth/gatt.h>
-#include <zephyr/bluetooth/services/bas.h>
-
-// RTC
 #include "rtc_ds3231.h"
 
 #define SLEEP_TIME_MS 1000
@@ -67,6 +51,8 @@ void main(void)
       return;
    }
 
+   rtc_ds3231_init();
+
    display_ssd1306_init();
 
    // Enable Bluetooth
@@ -83,10 +69,10 @@ void main(void)
    // Start advertising
    gatt_central_bt_start_advertising();
 
-   rtc_ds3231_init();
-
    while (1)
    {
+      // FIXME
+      // Improve this code to using tasks
       if ((count % 100) == 0U)
       {
          gpio_pin_toggle_dt(&led0);
