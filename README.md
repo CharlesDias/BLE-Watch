@@ -17,6 +17,8 @@ Some topics covered:
 * Bluetooth Low Energy (LE) technology.
 * The device works as GAP Peripheral and GATT server.
 * Implemented BLE services officially adopted by Bluetooth SIG and custom services too.
+* Continuous integration (CI) with GitHub Actions.
+* Use of Docker container.
 
 <img src="docs/images/project.gif" alt="drawing" width="600"/>
 
@@ -122,3 +124,10 @@ make build
 Test the BLE Watch application with the nRF Connect app, which is available for iOS (App Store) and Android (Google Play).
 
 ![BLE Watch](docs/images/ble_watch.gif)
+
+## Next improvements
+
+* Create dedicate task to update the display.
+* Implement Bluetooth service to set the date and time.
+* Flash the application project running west on Docker container.
+* Add Doxygen configuration.
