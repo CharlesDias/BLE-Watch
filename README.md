@@ -1,6 +1,6 @@
 # Bluetooth LE Watch
 
-[![Language](https://img.shields.io/badge/Made%20with-C-blue.svg)](https://shields.io/) <img src="https://img.shields.io/badge/CMake-064F8C?style=for-the-badge&logo=cmake&logoColor=white" height='20px'/>
+[![Language](https://img.shields.io/badge/Made%20with-C-blue.svg)](https://shields.io/) <img src="https://img.shields.io/badge/CMake-064F8C?style=for-the-badge&logo=cmake&logoColor=white" height='20px'/> [![build](https://github.com/CharlesDias/BLE-Watch/actions/workflows/build.yml/badge.svg)](https://github.com/CharlesDias/BLE-Watch/actions/workflows/build.yml)
 
 This is a sample project using the Zephyr RTOS and Nordic nRF Connect to create a BLE watch. This device is composed with:
 
@@ -66,6 +66,24 @@ Receives messages to be shown on the display screen.
 
 Under development.
 
-## Building and Running
+## Building and Running using Docker image
 
-Under development.
+### Interactive usage
+
+Access the project folder.
+
+```console
+cd ble_watch
+```
+
+And run the docker image.
+
+```console
+docker run --rm -it -v ${PWD}:/workdir/project -w /workdir/project charlesdias/nrfconnect-sdk /bin/bash
+```
+
+After that, run the command below to build the firmware.
+
+```console
+make build
+```
