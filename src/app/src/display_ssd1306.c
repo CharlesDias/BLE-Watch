@@ -81,9 +81,10 @@ void display_ssd1306_set_msg_string(const char* msg, uint16_t size)
 // Time format message YYYY-MM-DD HH:MM:SS DOW DOY
 void display_ssd1306_update_date_time(const char *date_time_string)
 {
-   char* date_substring = strtok(date_time_string, " ");
-   char* time_substring = strtok(NULL, " ");
-   char* dow_substring = strtok(NULL, " ");
+   char* temp_string = date_time_string;
+   char const* date_substring = strtok_r(temp_string, " ", &temp_string);
+   char const* time_substring = strtok_r(temp_string, " ", &temp_string);
+   char const* dow_substring = strtok_r(temp_string, " ", &temp_string);
 
    if(date_substring == NULL || time_substring == NULL || dow_substring == NULL)
    {
