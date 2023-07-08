@@ -22,6 +22,7 @@ jobs:
     - name: Run build-wrapper
       run: |
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make build
+          ls -la
     - name: Upload build-wrapper output
       uses: actions/upload-artifact@v3
       with:
@@ -43,6 +44,8 @@ jobs:
     needs: build
     name: Analyze
     runs-on: ubuntu-latest
+    env:
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     steps:
       - uses: actions/checkout@v3
         with:
@@ -54,11 +57,11 @@ jobs:
       - name: Move files to correct directory
         run: |
           ls -la
-          ls -la build-wrapper-output
-          mkdir -p build-wrapper-output
-          mv build-wrapper-dump.json build-wrapper-output/
+          mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
+          mv build-wrapper-dump.json ${{ env.BUILD_WRAPPER_OUT_DIR }}/
+          mv build-wrapper.log ${{ env.BUILD_WRAPPER_OUT_DIR }}/
           ls -la
-          ls -la build-wrapper-output
+          ls -la ${{ env.BUILD_WRAPPER_OUT_DIR }}/
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Run sonar-scanner
