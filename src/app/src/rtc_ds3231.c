@@ -154,7 +154,8 @@ static const char *format_time(time_t time,
    if (nsec >= 0) {
       bp += snprintf(bp, bpe - bp, ".%09lu", nsec);
    }
-   bp += strftime(bp, bpe - bp, " %a %j", tp);
+   // This is a false-positive. The bp value is a pointer to buf variable.
+   bp += strftime(bp, bpe - bp, " %a %j", tp); //NOSONAR
    return buf;
 }
 
