@@ -23,8 +23,6 @@ jobs:
     - name: Run build-wrapper
       run: |
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make build
-          pwd
-          ls
     - name: Upload build-wrapper output
       uses: actions/upload-artifact@v3
       with:
@@ -46,6 +44,8 @@ jobs:
     needs: build
     name: Analyze
     runs-on: ubuntu-latest
+    container:
+      image: charlesdias/nrfconnect-sdk
     steps:
       - uses: actions/checkout@v3
         with:
@@ -56,15 +56,8 @@ jobs:
           name: build-wrapper-output
       - name: Move files to correct directory
         run: |
-          pwd
-          ls
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
           mv build-wrapper-dump.json ${{ env.BUILD_WRAPPER_OUT_DIR }}/
-          mv build-wrapper.log ${{ env.BUILD_WRAPPER_OUT_DIR }}/
-          ls
-          cd ${{ env.BUILD_WRAPPER_OUT_DIR }}/
-          pwd
-          ls
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Run sonar-scanner
@@ -73,4 +66,3 @@ jobs:
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
             sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
-      
