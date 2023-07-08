@@ -18,7 +18,7 @@ Some topics covered:
 * Bluetooth Low Energy (LE) technology.
 * The device works as GAP Peripheral and GATT server.
 * Implemented BLE services officially adopted by Bluetooth SIG and custom services too.
-* Continuous integration (CI) with GitHub Actions.
+* Continuous integration (CI) with GitHub Actions, as SonarCloud integration.
 * Use of Docker container.
 
 <img src="docs/images/project.gif" alt="drawing" width="600"/>
