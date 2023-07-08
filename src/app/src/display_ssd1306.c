@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "display_ssd1306.h"
 
 #include <zephyr/kernel.h>
