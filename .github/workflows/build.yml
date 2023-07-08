@@ -7,14 +7,15 @@ on:
   release:
     types: [published]
 
+env:
+  BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
     container:
       image: charlesdias/nrfconnect-sdk
-    env:
-        BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     steps:
     - uses: actions/checkout@v3
     - name: Install sonar-scanner and build-wrapper
@@ -44,8 +45,6 @@ jobs:
     needs: build
     name: Analyze
     runs-on: ubuntu-latest
-    env:
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     steps:
       - uses: actions/checkout@v3
         with:
@@ -69,5 +68,5 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-            sonar-scanner --define sonar.cfamily.build-wrapper-output="build-wrapper-output"
+            sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
       
