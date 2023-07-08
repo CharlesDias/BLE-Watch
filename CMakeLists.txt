@@ -8,6 +8,15 @@ set(SHIELD ssd1306_128x64)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(ble_watch)
 
+# Global CMake variables are set here
+
+# This is necessary for Sonarlint tools
+# If enabled, generates a compile_commands.json file containing the exact compiler calls for all 
+# translation units of the project in machine-readable form.
+# Note: This option currently does not work well in combination with the UNITY_BUILD target 
+# property or the CMAKE_UNITY_BUILD variable.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set (APP_SOURCES 
    src/app/src/device_information_service.c
    src/app/src/display_ssd1306.c
