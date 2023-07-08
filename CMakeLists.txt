@@ -9,10 +9,10 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(ble_watch)
 
 set (APP_SOURCES 
-   app/src/device_information_service.c
-   app/src/display_ssd1306.c
-   app/src/gatt_central.c
-   app/src/rtc_ds3231.c
+   src/app/src/device_information_service.c
+   src/app/src/display_ssd1306.c
+   src/app/src/gatt_central.c
+   src/app/src/rtc_ds3231.c
 )
 
 target_sources(app PRIVATE 
@@ -21,5 +21,5 @@ target_sources(app PRIVATE
 )
 
 target_include_directories(app PRIVATE
-   app/inc
+   src/app/inc
 )
