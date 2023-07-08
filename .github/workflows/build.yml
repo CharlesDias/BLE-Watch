@@ -53,8 +53,12 @@ jobs:
           name: build-wrapper-output
       - name: Move files to correct directory
         run: |
+          ls -la
+          ls -la build-wrapper-output
           mkdir -p build-wrapper-output
           mv build-wrapper-dump.json build-wrapper-output/
+          ls -la
+          ls -la build-wrapper-output
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Run sonar-scanner
