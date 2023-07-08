@@ -7,28 +7,27 @@ on:
   release:
     types: [published]
 
-env:
-  BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
-
 jobs:
-  build:
-    name: Build
+  build-and-lint:
+    name: Build and analyze
     runs-on: ubuntu-latest
     container:
       image: charlesdias/nrfconnect-sdk
+    env:
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     steps:
     - uses: actions/checkout@v3
     - name: Install sonar-scanner and build-wrapper
       uses: SonarSource/sonarcloud-github-c-cpp@v1
-    - name: Run build-wrapper
+    - name: Run build-wrapper and build firmware
       run: |
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} make build
-    - name: Upload build-wrapper output
-      uses: actions/upload-artifact@v3
-      with:
-        name: build-wrapper-output
-        path: ${{ env.BUILD_WRAPPER_OUT_DIR }}
-
+    - name: Run sonar-scanner
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+          sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -38,31 +37,4 @@ jobs:
           build/zephyr/zephyr.hex
           build/zephyr/zephyr.map
         if-no-files-found: error
-        retention-days: 30
-  
-  analyze:
-    needs: build
-    name: Analyze
-    runs-on: ubuntu-latest
-    container:
-      image: charlesdias/nrfconnect-sdk
-    steps:
-      - uses: actions/checkout@v3
-        with:
-            fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Download build-wrapper output
-        uses: actions/download-artifact@v3
-        with:
-          name: build-wrapper-output
-      - name: Move files to correct directory
-        run: |
-          mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
-          mv build-wrapper-dump.json ${{ env.BUILD_WRAPPER_OUT_DIR }}/
-      - name: Install sonar-scanner and build-wrapper
-        uses: SonarSource/sonarcloud-github-c-cpp@v1
-      - name: Run sonar-scanner
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-            sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
+        retention-days: 7
