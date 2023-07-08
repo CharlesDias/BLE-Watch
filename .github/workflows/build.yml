@@ -1,4 +1,4 @@
-name: build
+name: Build
 
 on: 
   workflow_dispatch:
@@ -9,6 +9,7 @@ on:
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     container:
       image: charlesdias/nrfconnect-sdk
