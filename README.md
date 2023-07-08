@@ -71,31 +71,32 @@ Receives messages to be shown on the display screen.
 
 ```text
 .
-├── app
-│   ├── inc
-│   │   ├── device_information_service.h
-│   │   ├── display_ssd1306.h
-│   │   ├── gatt_central.h
-│   │   └── rtc_ds3231.h
-│   └── src
-│       ├── device_information_service.c
-│       ├── display_ssd1306.c
-│       ├── gatt_central.c
-│       └── rtc_ds3231.c
-├── build_nrf52840dk
 ├── CMakeLists.txt
 ├── docs
 │   ├── Assigned Numbers.pdf
 │   ├── DS3231.pdf
-│   └── DTS_v1.0.pdf
+│   ├── DTS_v1.0.pdf
+│   └── images
 ├── Kconfig
 ├── Makefile
 ├── nrf52840dk_nrf52840.overlay
 ├── prj.conf
 ├── README.md
 ├── sample.yaml
-└── src
-    └── main.c
+├── sonar-project.properties
+├── src
+│   ├── app
+│   │   ├── inc
+│   │   │   ├── device_information_service.h
+│   │   │   ├── display_ssd1306.h
+│   │   │   ├── gatt_central.h
+│   │   │   └── rtc_ds3231.h
+│   │   └── src
+│   │       ├── device_information_service.c
+│   │       ├── display_ssd1306.c
+│   │       ├── gatt_central.c
+│   │       └── rtc_ds3231.c
+│   └── main.c
 ```
 
 ## Building and running
