@@ -151,9 +151,9 @@ static const char *format_time(time_t time,
 {
    static char buf[64];
    char *bp = buf;
-   char *const bpe = bp + sizeof(buf);
+   char const *const bpe = bp + sizeof(buf);
    struct tm tv;
-   struct tm *tp = gmtime_r(&time, &tv);
+   struct tm const *tp = gmtime_r(&time, &tv);
 
    bp += strftime(bp, bpe - bp, "%Y-%m-%d %H:%M:%S", tp);
    if (nsec >= 0) {
