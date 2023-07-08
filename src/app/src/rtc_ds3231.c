@@ -18,10 +18,6 @@ static const char *rtc_msg_time;
 
 
 static const char *format_time(time_t time, long nsec);
-static void sec_counter_callback(const struct device *dev, uint8_t id, uint32_t ticks, void *ud);
-static void sec_alarm_handler(const struct device *dev, uint8_t id, uint32_t syncclock, void *ud);
-static void timespec_subtract(struct timespec *amb, const struct timespec *a, const struct timespec *b);
-static void timespec_add(struct timespec *apb, const struct timespec *a, const struct timespec *b);
 static void min_alarm_handler(const struct device *dev, uint8_t id, uint32_t syncclock, void *ud);
 static void show_counter(const struct device *ds3231);
 static void set_aligned_clock(const struct device *ds3231);
@@ -107,7 +103,6 @@ void rtc_ds3231_init(void)
          | MAXIM_DS3231_ALARM_FLAGS_IGNMN
          | MAXIM_DS3231_ALARM_FLAGS_IGNSE;
    sec_alarm.handler = min_alarm_handler;
-   // sec_alarm.user_data = &sec_alarm;
 
    printk("Min Sec base time: %s\n", format_time(sec_alarm.time, -1));
 
@@ -151,80 +146,17 @@ static const char *format_time(time_t time,
 {
    static char buf[64];
    char *bp = buf;
-   char *const bpe = bp + sizeof(buf);
+   char const *const bpe = bp + sizeof(buf);
    struct tm tv;
-   struct tm *tp = gmtime_r(&time, &tv);
+   struct tm const *tp = gmtime_r(&time, &tv);
 
    bp += strftime(bp, bpe - bp, "%Y-%m-%d %H:%M:%S", tp);
    if (nsec >= 0) {
       bp += snprintf(bp, bpe - bp, ".%09lu", nsec);
    }
+   // This is a false-positive. The bp value is a pointer to buf variable.
    bp += strftime(bp, bpe - bp, " %a %j", tp);
    return buf;
-}
-
-static void sec_counter_callback(const struct device *dev,
-            uint8_t id,
-            uint32_t ticks,
-            void *ud)
-{
-   printk("Counter callback at %u ms, id %d, ticks %u, ud %p\n",
-         k_uptime_get_32(), id, ticks, ud);
-}
-
-static void sec_alarm_handler(const struct device *dev,
-               uint8_t id,
-               uint32_t syncclock,
-               void *ud)
-{
-   uint32_t now = maxim_ds3231_read_syncclock(dev);
-   struct counter_alarm_cfg alarm = {
-      .callback = sec_counter_callback,
-      .ticks = 10,
-      .user_data = ud,
-   };
-
-   printk("setting channel alarm\n");
-   int rc = counter_set_channel_alarm(dev, id, &alarm);
-
-   printk("Sec signaled at %u ms, param %p, delay %u; set %d\n",
-         k_uptime_get_32(), ud, now - syncclock, rc);
-}
-
-
-/** Calculate the normalized result of a - b.
- *
- * For both inputs and outputs tv_nsec must be in the range [0,
- * NSEC_PER_SEC).  tv_sec may be negative, zero, or positive.
- */
-static void timespec_subtract(struct timespec *amb,
-            const struct timespec *a,
-            const struct timespec *b)
-{
-   if (a->tv_nsec >= b->tv_nsec) {
-      amb->tv_nsec = a->tv_nsec - b->tv_nsec;
-      amb->tv_sec = a->tv_sec - b->tv_sec;
-   } else {
-      amb->tv_nsec = NSEC_PER_SEC + a->tv_nsec - b->tv_nsec;
-      amb->tv_sec = a->tv_sec - b->tv_sec - 1;
-   }
-}
-
-/** Calculate the normalized result of a + b.
- *
- * For both inputs and outputs tv_nsec must be in the range [0,
- * NSEC_PER_SEC).  tv_sec may be negative, zero, or positive.
- */
-static void timespec_add(struct timespec *apb,
-      const struct timespec *a,
-      const struct timespec *b)
-{
-   apb->tv_nsec = a->tv_nsec + b->tv_nsec;
-   apb->tv_sec = a->tv_sec + b->tv_sec;
-   if (apb->tv_nsec >= NSEC_PER_SEC) {
-      apb->tv_sec += 1;
-      apb->tv_nsec -= NSEC_PER_SEC;
-   }
 }
 
 static void min_alarm_handler(const struct device *dev,
@@ -238,7 +170,7 @@ static void min_alarm_handler(const struct device *dev,
    (void)counter_get_value(dev, &time);
 
    uint32_t uptime = k_uptime_get_32();
-   uint8_t us = uptime % 1000U;
+   uint16_t us = uptime % 1000U;
 
    uptime /= 1000U;
    uint8_t se = uptime % 60U;
@@ -247,7 +179,7 @@ static void min_alarm_handler(const struct device *dev,
    uint8_t mn = uptime % 60U;
 
    uptime /= 60U;
-   uint8_t hr = uptime;
+   uint8_t hr = (uint8_t)uptime;
 
    (void)maxim_ds3231_get_syncpoint(dev, &sp);
 
