@@ -8,6 +8,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/gpio.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "display_ssd1306.h"
@@ -29,7 +30,7 @@ static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 // Register module log name
 LOG_MODULE_REGISTER(Main, LOG_LEVEL_DBG);
 
-void main(void)
+int main(void)
 {
    int err;
    uint32_t count = 0;
@@ -39,7 +40,7 @@ void main(void)
    if (!device_is_ready(led0.port))
    {
       LOG_ERR("Device %s is not ready.", led0.port->name);
-      return;
+      return EXIT_FAILURE;
    }
 
    LOG_DBG("Device %s is READY.", led0.port->name);
@@ -48,7 +49,7 @@ void main(void)
    if (err < 0)
    {
       LOG_ERR("It was not possible configure the device %s.", led0.port->name);
-      return;
+      return EXIT_FAILURE;
    }
 
    rtc_ds3231_init();
@@ -60,7 +61,7 @@ void main(void)
    if(err)
    {
       LOG_ERR("Bluetooth init failed (err %d)", err);
-      return;
+      return EXIT_FAILURE;
    }
 
    // Setting the device information
@@ -89,4 +90,6 @@ void main(void)
       ++count;
       k_sleep(K_MSEC(10));
    }
+
+   return EXIT_SUCCESS;
 }
