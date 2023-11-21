@@ -1,0 +1,7 @@
+tests:
+  # section.subsection
+  sample.testing.ztest:
+    build_only: true
+    platform_allow: 
+      - nrf52840dk_nrf52840
+    tags: test_framework
