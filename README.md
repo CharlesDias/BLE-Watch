@@ -71,53 +71,94 @@ Receives messages to be shown on the display screen.
 
 ```text
 .
-├── app
-│   ├── inc
-│   │   ├── device_information_service.h
-│   │   ├── display_ssd1306.h
-│   │   ├── gatt_central.h
-│   │   └── rtc_ds3231.h
-│   └── src
-│       ├── device_information_service.c
-│       ├── display_ssd1306.c
-│       ├── gatt_central.c
-│       └── rtc_ds3231.c
-├── build_nrf52840dk
 ├── CMakeLists.txt
 ├── docs
 │   ├── Assigned Numbers.pdf
 │   ├── DS3231.pdf
-│   └── DTS_v1.0.pdf
+│   ├── DTS_v1.0.pdf
+│   └── images
 ├── Kconfig
 ├── Makefile
 ├── nrf52840dk_nrf52840.overlay
 ├── prj.conf
 ├── README.md
 ├── sample.yaml
-└── src
-    └── main.c
+├── sonar-project.properties
+├── src
+│   ├── app
+│   │   ├── inc
+│   │   │   ├── device_information_service.h
+│   │   │   ├── display_ssd1306.h
+│   │   │   ├── gatt_central.h
+│   │   │   └── rtc_ds3231.h
+│   │   └── src
+│   │       ├── device_information_service.c
+│   │       ├── display_ssd1306.c
+│   │       ├── gatt_central.c
+│   │       └── rtc_ds3231.c
+│   └── main.c
 ```
 
-## Building and running
+## Building and Running
 
-### Building with Docker image on interactive mode
+### Building with Docker image in interactive mode
 
-Access the project folder.
+Navigate to the project folder.
 
 ```console
-cd BLE-Watch
+$ cd BLE-Watch
 ```
 
-And run the docker image.
+Then, run the Docker image. Replace the `--device=/dev/bus/usb/001/xxx` with the correct value.
 
 ```console
-docker run --rm -it -v ${PWD}:/workdir/project -w /workdir/project charlesdias/nrfconnect-sdk /bin/bash
+$ docker run --rm -it --device=/dev/bus/usb/001/xxx --device=/dev/ttyACM0 --device=/dev/ttyACM1 -v ${PWD}:/workdir/project -w /workdir/project charlesdias/nrfconnect-sdk /bin/bash
 ```
 
-After that, run the command below to build the firmware.
+Afterwards, execute the command below to build the firmware.
 
 ```console
-make build
+$ make build
+```
+
+You should expect an output similar to the following:
+
+```console
+.
+.
+. 
+
+[390/400] Linking C executable zephyr/zephyr_pre0.elf
+[394/400] Linking C executable zephyr/zephyr_pre1.elf
+
+[400/400] Linking C executable zephyr/zephyr.elf
+Memory region         Used Size  Region Size  %age Used
+           FLASH:      353588 B         1 MB     33.72%
+             RAM:       55624 B       256 KB     21.22%
+        IDT_LIST:          0 GB         2 KB      0.00%
+```
+
+### Flashing the firmware
+
+After the build is complete, run the following command to flash the firmware:
+
+```console
+$ make flash
+```
+
+The expected output should be similar to:
+
+```console
+.
+.
+.
+[ ######               ]   0.000s | Verifying image - block 1 of 2
+[ #################### ]   0.000s | Verifying image - Verify successful
+[ #################### ]   2.377s | Verify file - Done verifying
+
+Applying system reset.
+Run.
+-- runners.nrfjprog: Board with serial number <serial-number-value> flashed successfully.
 ```
 
 ### Running
@@ -125,6 +166,36 @@ make build
 Test the BLE Watch application with the nRF Connect app, which is available for iOS (App Store) and Android (Google Play).
 
 ![BLE Watch](docs/images/ble_watch.gif)
+
+
+## Unit Testing with Ztest
+
+Ztest is a simple testing framework for Zephyr applications. It provides basic structures for writing test cases and test suites.
+
+To run the unit tests for this project, follow these steps:
+
+1. Navigate to the project's directory.
+
+```console
+$ cd BLE-Watch
+```
+
+2. Open the `/dev/ttyACM0` using your preferable serial communication program.
+
+3. Build the tests with the following command:
+
+```console
+$ make tests
+```
+
+4. After building, flash the tests firmware into the board with:
+
+```console
+$ make flash
+```
+
+The output will show the results of the tests on `/dev/ttyACM0`, indicating which tests passed and which failed.
+
 
 ## Next improvements
 
