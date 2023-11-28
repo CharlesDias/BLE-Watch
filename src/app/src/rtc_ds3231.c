@@ -144,7 +144,7 @@ const char* rtc_ds3231_get_last_time(void)
 static const char *format_time(time_t time,
                long nsec)
 {
-   static char buf[64];
+   static char buf[RTC_MSG_BUFFER_SIZE];
    char *bp = buf;
    char const *const bpe = bp + sizeof(buf);
    struct tm tv;

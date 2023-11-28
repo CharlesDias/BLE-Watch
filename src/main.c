@@ -15,7 +15,20 @@
 #include "gatt_central.h"
 #include "rtc_ds3231.h"
 
+// Register module log name
+LOG_MODULE_REGISTER(Main, LOG_LEVEL_DBG);
+
+#define STACKSIZE 2048
+#define PRIORITY 7
+
 #define SLEEP_TIME_MS 1000
+struct data_msg {
+   uint8_t msg_buffer[RTC_MSG_BUFFER_SIZE];
+};
+
+struct k_msgq rtc_msg_queue;
+
+K_MSGQ_DEFINE(rtc_msg_queue, sizeof(struct data_msg), 2, 1);
 
 // The devicetree node identifier for the "led0" alias.
 #define LED0_NODE DT_ALIAS(led0)
@@ -26,13 +39,48 @@
 
 static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
-// Register module log name
-LOG_MODULE_REGISTER(Main, LOG_LEVEL_DBG);
+void rtc_thread(void)
+{
+   struct data_msg msg_buffer;
+
+   rtc_ds3231_init();
+
+   while (1)
+   {
+      const char *rtc_msg_time = rtc_ds3231_get_last_time();
+      strncpy(msg_buffer.msg_buffer, rtc_msg_time, RTC_MSG_BUFFER_SIZE);
+
+      while (k_msgq_put(&rtc_msg_queue, &msg_buffer, K_NO_WAIT) != 0)
+      {
+         /* message queue is full: purge old data & try again */
+         k_msgq_purge(&rtc_msg_queue);
+      }
+
+      k_sleep(K_SECONDS(1));
+   }
+}
+
+void display_thread(void)
+{
+   struct data_msg msg_buffer;
+
+   display_ssd1306_init();
+
+   while (1)
+   {
+      k_msgq_get(&rtc_msg_queue, &msg_buffer, K_FOREVER);
+
+      display_ssd1306_update_date_time(msg_buffer.msg_buffer);
+      display_ssd1306_run_handler();
+   }
+}
+
+K_THREAD_DEFINE(rtc_thread_id, STACKSIZE, rtc_thread, NULL, NULL, NULL, PRIORITY, 0, 100);
+K_THREAD_DEFINE(display_thread_id, STACKSIZE, display_thread, NULL, NULL, NULL, PRIORITY, 0, 200);
 
 int main(void)
 {
    int err;
-   uint32_t count = 0;
 
    LOG_INF("Running application on board: %s.", CONFIG_BOARD);
    LOG_INF("Build time: " __DATE__ " " __TIME__);
@@ -53,32 +101,17 @@ int main(void)
       return EXIT_FAILURE;
    }
 
-   rtc_ds3231_init();
-
-   display_ssd1306_init();
-
    // Start advertising
    gatt_central_bt_start_advertising();
 
    while (1)
    {
-      // FIXME
-      // Improve this code to using tasks
-      if ((count % 100) == 0U)
-      {
-         gpio_pin_toggle_dt(&led0);
+      gpio_pin_toggle_dt(&led0);
 
-         const char *rtc_msg_time = rtc_ds3231_get_last_time();
-         display_ssd1306_update_date_time(rtc_msg_time);
+      // Battery level simulation
+      gatt_server_battery_level_notify();
 
-         // Battery level simulation
-         gatt_server_battery_level_notify();
-      }
-
-      display_ssd1306_run_handler();
-
-      ++count;
-      k_sleep(K_MSEC(10));
+      k_sleep(K_SECONDS(1));
    }
 
    return EXIT_SUCCESS;
