@@ -12,7 +12,6 @@
 #include <string.h>
 
 #include "display_ssd1306.h"
-#include "device_information_service.h"
 #include "gatt_central.h"
 #include "rtc_ds3231.h"
 
@@ -35,7 +34,9 @@ int main(void)
    int err;
    uint32_t count = 0;
 
-   LOG_DBG("Running application on board: %s\n", CONFIG_BOARD);
+   LOG_INF("Running application on board: %s.", CONFIG_BOARD);
+   LOG_INF("Build time: " __DATE__ " " __TIME__);
+   k_sleep(K_SECONDS(2));
 
    if (!device_is_ready(led0.port))
    {
@@ -55,17 +56,6 @@ int main(void)
    rtc_ds3231_init();
 
    display_ssd1306_init();
-
-   // Enable Bluetooth
-   err = gatt_central_bt_enable();
-   if(err)
-   {
-      LOG_ERR("Bluetooth init failed (err %d)", err);
-      return EXIT_FAILURE;
-   }
-
-   // Setting the device information
-   set_device_information_runtime();
 
    // Start advertising
    gatt_central_bt_start_advertising();

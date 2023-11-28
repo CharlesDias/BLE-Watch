@@ -8,8 +8,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
-int gatt_central_bt_enable(void);
-void gatt_central_bt_start_advertising(void);
+int gatt_central_bt_start_advertising(void);
 void gatt_server_battery_level_notify(void);
 
 #ifdef __cplusplus
