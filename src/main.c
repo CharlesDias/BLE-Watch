@@ -18,8 +18,10 @@
 // Register module log name
 LOG_MODULE_REGISTER(Main, LOG_LEVEL_DBG);
 
-#define STACKSIZE 2048
-#define PRIORITY 7
+#define RTC_THREAD_STACK_SIZE 2048
+#define DISPLAY_THREAD_STACK_SIZE 2048
+#define RTC_THREAD_PRIORITY 7
+#define DISPLAY_THREAD_PRIORITY 6
 
 typedef struct rtc_msg
 {
@@ -83,12 +85,12 @@ void display_thread(void)
 
       display_ssd1306_run_handler();
 
-      k_sleep(K_MSEC(500));
+      k_sleep(K_MSEC(250));
    }
 }
 
-K_THREAD_DEFINE(rtc_thread_id, STACKSIZE, rtc_thread, NULL, NULL, NULL, PRIORITY, 0, 100);
-K_THREAD_DEFINE(display_thread_id, STACKSIZE, display_thread, NULL, NULL, NULL, PRIORITY, 0, 200);
+K_THREAD_DEFINE(rtc_thread_id, RTC_THREAD_STACK_SIZE, rtc_thread, NULL, NULL, NULL, RTC_THREAD_PRIORITY, 0, 100);
+K_THREAD_DEFINE(display_thread_id, DISPLAY_THREAD_STACK_SIZE, display_thread, NULL, NULL, NULL, DISPLAY_THREAD_PRIORITY, 0, 200);
 
 int main(void)
 {
