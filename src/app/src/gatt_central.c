@@ -139,7 +139,7 @@ static void advertise(struct k_work *work)
 }
 
 // Implements the battery level notification
-void battery_level_notify(void)
+static void battery_level_notify(struct k_work *work)
 {
    uint8_t battery_level = bt_bas_get_battery_level();
 
