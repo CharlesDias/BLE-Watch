@@ -7,6 +7,8 @@ extern "C" {
 
 #include <stdio.h>
 
+#define RTC_MSG_BUFFER_SIZE     64
+
 void rtc_ds3231_init(void);
 const char* rtc_ds3231_get_last_time(void);
 

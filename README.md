@@ -1,6 +1,10 @@
 # Bluetooth LE Watch
 
-[![Language](https://img.shields.io/badge/Made%20with-C-blue.svg)](https://shields.io/) <img src="https://img.shields.io/badge/CMake-064F8C?style=for-the-badge&logo=cmake&logoColor=white" height='20px'/> [![build](https://github.com/CharlesDias/BLE-Watch/actions/workflows/build.yml/badge.svg)](https://github.com/CharlesDias/BLE-Watch/actions/workflows/build.yml) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=CharlesDias_BLE-Watch&metric=alert_status)](https://sonarcloud.io/dashboard?id=CharlesDias_BLE-Watch)
+[![Language](https://img.shields.io/badge/made%20with-C-blue.svg)](https://shields.io/)
+![License](https://camo.githubusercontent.com/890acbdcb87868b382af9a4b1fac507b9659d9bf/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6c6963656e73652d4d49542d626c75652e737667)
+<img src="https://img.shields.io/badge/CMake-064F8C?style=for-the-badge&logo=cmake&logoColor=white" height='20px'/>
+[![build](https://github.com/CharlesDias/BLE-Watch/actions/workflows/build.yml/badge.svg)](https://github.com/CharlesDias/BLE-Watch/actions/workflows/build.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=CharlesDias_BLE-Watch&metric=alert_status)](https://sonarcloud.io/dashboard?id=CharlesDias_BLE-Watch)
 
 
 This is a sample project using the Zephyr RTOS and Nordic nRF Connect to create a BLE watch. This device is composed with:
