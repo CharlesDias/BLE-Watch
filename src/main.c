@@ -21,14 +21,14 @@ LOG_MODULE_REGISTER(Main, LOG_LEVEL_DBG);
 #define STACKSIZE 2048
 #define PRIORITY 7
 
-#define SLEEP_TIME_MS 1000
-struct data_msg {
+typedef struct rtc_msg
+{
    uint8_t msg_buffer[RTC_MSG_BUFFER_SIZE];
-};
+} rtc_msg_t;
 
 struct k_msgq rtc_msg_queue;
 
-K_MSGQ_DEFINE(rtc_msg_queue, sizeof(struct data_msg), 2, 1);
+K_MSGQ_DEFINE(rtc_msg_queue, sizeof(rtc_msg_t), 2, 1);
 
 // The devicetree node identifier for the "led0" alias.
 #define LED0_NODE DT_ALIAS(led0)
@@ -41,7 +41,7 @@ static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 void rtc_thread(void)
 {
-   struct data_msg msg_buffer;
+   rtc_msg_t msg_buffer;
 
    rtc_ds3231_init();
 
@@ -62,16 +62,28 @@ void rtc_thread(void)
 
 void display_thread(void)
 {
-   struct data_msg msg_buffer;
+   rtc_msg_t rtc_msg_buffer;
+   display_msg_t display_msg_buffer;
 
    display_ssd1306_init();
 
    while (1)
    {
-      k_msgq_get(&rtc_msg_queue, &msg_buffer, K_FOREVER);
+      // Handle RTC messages
+      if (k_msgq_get(&rtc_msg_queue, &rtc_msg_buffer, K_NO_WAIT) == 0)
+      {
+         display_ssd1306_update_date_time(rtc_msg_buffer.msg_buffer);
+      }
 
-      display_ssd1306_update_date_time(msg_buffer.msg_buffer);
+      // Handle messages from BLE work queue
+      if (k_msgq_get(&display_msg_queue, &display_msg_buffer, K_NO_WAIT) == 0)
+      {
+         display_ssd1306_set_msg_string(display_msg_buffer.msg_buffer, (uint16_t)strlen(display_msg_buffer.msg_buffer));
+      }
+
       display_ssd1306_run_handler();
+
+      k_sleep(K_MSEC(500));
    }
 }
 

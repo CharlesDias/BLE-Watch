@@ -4,9 +4,6 @@
 
 #include "device_information_service.h"
 
-// OLED Display SSD1306
-#include "display_ssd1306.h"
-
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
@@ -28,6 +25,10 @@ static struct k_work battery_level_work;
 
 // Display variable
 static uint8_t ble_message_buffer[DISPLAY_MSG_BUFFER_SIZE];
+
+struct k_msgq display_msg_queue;
+
+K_MSGQ_DEFINE(display_msg_queue, sizeof(display_msg_t), 2, 1);
 
 // Bluetooth advertisement
 static const struct bt_data ad[] = {
@@ -70,11 +71,20 @@ ssize_t display_msg_write(struct bt_conn *conn,
                           const struct bt_gatt_attr *attr, const void *buf,
                           uint16_t len, uint16_t offset, uint8_t flags)
 {
-   const char *msg_buffer = display_ssd1306_get_msg_string();
+   display_msg_t display_msg_buffer;
+   const uint16_t buffer_size = sizeof(display_msg_buffer.msg_buffer);
+   uint16_t size_str = len >= buffer_size ? buffer_size - 1 : len; 
 
-   display_ssd1306_set_msg_string(buf, len);
+   memcpy(display_msg_buffer.msg_buffer, buf, size_str);
+   display_msg_buffer.msg_buffer[size_str] = '\0';
 
-   LOG_DBG("Received message size %u: %s", len, msg_buffer);
+   while (k_msgq_put(&display_msg_queue, &display_msg_buffer, K_NO_WAIT) != 0)
+   {
+      /* message queue is full: purge old data & try again */
+      k_msgq_purge(&display_msg_queue);
+   }
+
+   LOG_DBG("Received message size %u: %s", len, display_msg_buffer.msg_buffer);
 
    return len;
 }
